@@ -1,0 +1,9 @@
+{
+  "watch": [
+    "controllers/**/*.js",
+    "middleware/**/*.js",
+    "routes/**/*.js",
+    "store/**/*.js",
+    "app.js"
+  ]
+}

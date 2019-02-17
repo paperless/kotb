@@ -1,0 +1,38 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+/build
+
+# System
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Editor
+## Sublime Text
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+
+.env# ignore node_modules symlink
+node_modules
+node_modules.nosync
+
+.env
+dist/
+database.sqlite3
