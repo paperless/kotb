@@ -23,7 +23,7 @@ exports.token = (req, res, next) => {
   let password = req.body.password;
 
   if (password !== PASSWORD) {
-    res.status(401).json({
+    return res.status(401).json({
       error: 'A palavra-passe não é válida.',
     });
   }

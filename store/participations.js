@@ -29,9 +29,21 @@ class Participation {
         const playerExists = await Player.idExists(player.id);
 
         if (!playerExists) {
-          await Player.create(player.id)
+          let newName = player.id; // new player names come as the id, confusing but quicker to implement
+
+          await Player.create(newName)
             .then((id) => {
               player.id = id;
+
+              // To avoid creating multiple new players with the same name
+              // if a new player shows up in multiple games for the first time
+              games.forEach(g => {
+                g.players.forEach(p => {
+                  if (p.id === newName) {
+                    p.id = id;
+                  }
+                });
+              });
             });
         }
       }
