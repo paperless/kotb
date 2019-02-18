@@ -6,7 +6,7 @@ services:
     image: zzrot/alpine-caddy
     restart: unless-stopped
     ports:
-      - 8081:80
+      - 80:80
       - 443:443
     volumes:
       - ./Caddyfile:/etc/Caddyfile
@@ -19,10 +19,8 @@ services:
       dockerfile: .docker/Dockerfile-node
       context: ../
     restart: unless-stopped
-    volumes:
-      - ../.:/code
     networks:
       - frontend
 
 networks:
-    frontend:
+  frontend:

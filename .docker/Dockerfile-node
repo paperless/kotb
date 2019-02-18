@@ -8,8 +8,9 @@ RUN npm install
 
 COPY . .
 
+RUN npm run bootstrap
+RUN npm run build
+
 EXPOSE 8080
 
-CMD ["npm", "bootstrap"]
-CMD ["npm", "build"]
 CMD ["npm", "start"]
