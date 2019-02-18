@@ -1,0 +1,7 @@
+example.com {
+    gzip
+    proxy / node:8080 {
+        transparent
+    }
+    tls example@example.com
+}

@@ -1,0 +1,15 @@
+FROM node:11
+
+WORKDIR /code
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+EXPOSE 8080
+
+CMD ["npm", "bootstrap"]
+CMD ["npm", "build"]
+CMD ["npm", "start"]

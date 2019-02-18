@@ -1,0 +1,28 @@
+# http://geekyplatypus.com/making-your-dockerised-php-application-even-better/
+version: "2"
+
+services:
+  caddy:
+    image: zzrot/alpine-caddy
+    restart: unless-stopped
+    ports:
+      - 8081:80
+      - 443:443
+    volumes:
+      - ./Caddyfile:/etc/Caddyfile
+      - ~/.caddy:/root/.caddy
+    networks:
+      - frontend
+
+  node:
+    build:
+      dockerfile: .docker/Dockerfile-node
+      context: ../
+    restart: unless-stopped
+    volumes:
+      - ../.:/code
+    networks:
+      - frontend
+
+networks:
+    frontend:
