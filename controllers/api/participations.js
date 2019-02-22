@@ -22,6 +22,16 @@ exports.create = (req, res, next) => {
   let date = new Date(req.body.date);
   let games = req.body.games;
 
+  let hasInvalidGame = false;
+
+  games.forEach(game => {
+    if (game.id === null || game.id.length === 0) {
+      hasInvalidGame = true;
+    }
+  });
+
+  if (hasInvalidGame) return res.status(422).json({ errors: [{ games: 'Pelo menos um dos jogos é inválido' }] });
+
   Participation.create(date, games)
     .then(() => {
       res.status(200).json({});

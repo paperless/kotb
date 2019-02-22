@@ -24,6 +24,7 @@ const terserPlugin = new TerserPlugin({
 
 module.exports = {
   watch: devMode,
+  mode: process.env.NODE_ENV,
   entry: { main: [
     './src/index.js',
   ] },
@@ -56,9 +57,9 @@ module.exports = {
     htmlPlugin,
   ],
   optimization: {
-    minimizer: [
+    minimizer: !devMode ? [
       terserPlugin,
       new OptimizeCSSAssetsPlugin({}),
-    ],
+    ] : [],
   },
 };

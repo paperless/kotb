@@ -28,7 +28,6 @@ class App extends Component {
     this.pickModalToOpen = this.pickModalToOpen.bind(this);
     this.openLoginModal = this.openLoginModal.bind(this);
     this.openAddScoreModal = this.openAddScoreModal.bind(this);
-    // this.afterOpenModal = this.afterOpenModal.bind(this);
     this.closeLoginModal = this.closeLoginModal.bind(this);
     this.closeAddScoreModal = this.closeAddScoreModal.bind(this);
 
@@ -49,138 +48,6 @@ class App extends Component {
       games: [],
       players: [],
       gammeResults: [],
-      /* games: [
-        {
-          value: 1,
-          label: 'Port Royal',
-        },
-        {
-          value: 2,
-          label: 'Azul',
-        },
-        {
-          value: 3,
-          label: 'Splendor',
-        },
-        {
-          value: 4,
-          label: 'Skull',
-        },
-        {
-          value: 5,
-          label: 'King Tokyo',
-        },
-        {
-          value: 6,
-          label: 'Catan',
-        },
-        {
-          value: 7,
-          label: 'Império em 8 minutos',
-        },
-      ],
-      gameResults: [
-        {
-          player: 1,
-          games: [
-            {
-              id: 1,
-              wins: '7 / 7',
-            },
-          ],
-          percent: 100,
-        },
-        {
-          player: 1,
-          games: [
-            {
-              id: 1,
-              wins: '7 / 7',
-            },
-          ],
-          percent: 100,
-        },
-        {
-          player: 1,
-          games: [
-            {
-              id: 1,
-              wins: '7 / 7',
-            },
-          ],
-          percent: 100,
-        },
-        {
-          player: 1,
-          games: [
-            {
-              id: 1,
-              wins: '7 / 7',
-            },
-          ],
-          percent: 100,
-        },
-        {
-          player: 1,
-          games: [
-            {
-              id: 1,
-              wins: '7 / 7',
-            },
-          ],
-          percent: 100,
-        },
-        {
-          player: 1,
-          games: [
-            {
-              id: 1,
-              wins: '7 / 7',
-            },
-          ],
-          percent: 100,
-        },
-        {
-          player: 1,
-          games: [
-            {
-              id: 1,
-              wins: '7 / 7',
-            },
-          ],
-          percent: 100,
-        },
-      ],
-      players: [
-        {
-          value: 1,
-          label: 'Ana Joaquina',
-        },
-        {
-          value: 2,
-          label: 'Barbara Silva',
-        },
-        {
-          value: 3,
-          label: 'Carlos Marcolino',
-        },
-        {
-          value: 4,
-          label: 'José Teixeira',
-        },
-        {
-          value: 5,
-          label: 'Rafaela Oliveira',
-        },
-        {
-          value: 6,
-          label: 'Tatiana Costa',
-        },
-        {
-          value: 7,
-          label: 'Zeca Figueirinha',
-        },
-      ], */
       incId: 0, // list keys for items without ids - https://reactjs.org/docs/lists-and-keys.html
     };
   }
@@ -313,6 +180,10 @@ class App extends Component {
   }
 
   handleSubmitScores () {
+    this.setState({
+      submitting: true,
+    });
+
     fetch('/api/participations', {
       method: 'post',
       headers: {
@@ -326,6 +197,7 @@ class App extends Component {
             date: new Date(),
             games: [],
           },
+          submitting: false,
         });
 
         this.closeAddScoreModal();
@@ -576,9 +448,9 @@ class App extends Component {
           let gameResult = result.games[game];
 
           if (typeof gameResult !== 'undefined') {
-            resultEl.push(<td key={3 + k}>{gameResult.won} / {gameResult.total}</td>);
+            resultEl.push(<td key={3 + k}>{gameResult.won} / {gameResult.total} <span className="gamePerc">({Math.round(gameResult.won / gameResult.total * 100)}%)</span></td>);
           } else {
-            resultEl.push(<td key={3 + k}>0 / 0</td>);
+            resultEl.push(<td key={3 + k}>—</td>);
           }
         }
 
@@ -593,19 +465,21 @@ class App extends Component {
           <button className="login button" onClick={this.pickModalToOpen} href="/login">Adicionar <span className="plus">+</span></button>
         </header>
         <div className="App-content">
-          <table className="leaderboard">
-            <thead>
-              <tr>
-                <th></th>
-                <th>Jogador</th>
-                <th></th>
-                {tableHeader}
-              </tr>
-            </thead>
-            <tbody>
-              {results}
-            </tbody>
-          </table>
+          <div className="leaderboardContainer">
+            <table className="leaderboard">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Jogador</th>
+                  <th></th>
+                  {tableHeader}
+                </tr>
+              </thead>
+              <tbody>
+                {results}
+              </tbody>
+            </table>
+          </div>
 
           <Modal
             className="addScoreModal"
@@ -630,6 +504,7 @@ class App extends Component {
               isNameOptionDisabled={(option, gameIndex) => this.isNameOptionDisabled(option, gameIndex)}
               games={this.state.games}
               players={this.state.players}
+              submitting={this.state.submitting}
             >
             </AddGameDataForm>
           </Modal>
@@ -655,6 +530,27 @@ class App extends Component {
 }
 
 class AddGameDataForm extends Component {
+  createButtonDisabled () {
+    let disabled = false;
+    let games = this.props.formData.games;
+
+    if (this.props.submitting) { return true; }
+
+    if (games.length === 0) {
+      return true;
+    }
+
+    games.forEach(game => {
+      if (game.id === null) { disabled = true; }
+
+      game.players.forEach(player => {
+        if (game.players.length === 1 && player.id === null) { disabled = true; }
+      });
+    });
+
+    return disabled;
+  }
+
   render () {
     let games = this.props.formData.games.map((game, i) => {
       return (
@@ -735,7 +631,7 @@ class AddGameDataForm extends Component {
           {games}
         </div>
         <div className="resultsFooter">
-          <button type="button" onClick={this.props.handleSubmitScores} className="button submit">Guardar <span role="img" aria-label="checkmark">✔️</span></button>
+          <button type="button" disabled={this.createButtonDisabled()} onClick={this.props.handleSubmitScores} className="button submit">Guardar <span role="img" aria-label="checkmark">✔️</span></button>
         </div>
       </form>
     );
@@ -757,6 +653,7 @@ AddGameDataForm.propTypes = {
   isGameOptionDisabled: PropTypes.bool,
   players: PropTypes.array,
   isNameOptionDisabled: PropTypes.func,
+  submitting: PropTypes.bool,
 };
 
 export default App;
