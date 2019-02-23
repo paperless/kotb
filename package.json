@@ -21,8 +21,7 @@
     "react-modal": "^3.8.1",
     "react-select": "^2.4.1",
     "react-text-mask": "^5.4.3",
-    "sqlite3": "^4.0.6",
-    "webpack-node-externals": "^1.7.2"
+    "sqlite3": "^4.0.6"
   },
   "scripts": {
     "clean": "del dist",
@@ -46,12 +45,12 @@
     "@babel/preset-env": "^7.3.1",
     "@babel/preset-react": "^7.0.0",
     "babel-loader": "^8.0.5",
-    "case-sensitive-paths-webpack-plugin": "^2.2.0",
     "cross-env": "^5.2.0",
     "css-loader": "^2.1.0",
     "del-cli": "^1.1.0",
     "eslint": "^5.14.0",
     "eslint-config-standard": "^12.0.0",
+    "eslint-loader": "^2.1.2",
     "eslint-plugin-import": "^2.16.0",
     "eslint-plugin-jsx-a11y": "^6.2.1",
     "eslint-plugin-node": "^8.0.1",
