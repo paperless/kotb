@@ -32,5 +32,11 @@
             "functions": "always-multiline"
         }],
         "react/jsx-uses-vars": ["error"]
+    },
+    "settings": {
+      "react": {
+        "pragma": "React",
+        "version": "detect"
+      }
     }
 }
