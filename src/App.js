@@ -1,13 +1,59 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Modal from 'react-modal';
-import DatePicker, { registerLocale } from 'react-datepicker';
-import pt from 'date-fns/locale/pt';
-import 'react-datepicker/dist/react-datepicker.css';
+import moment from 'moment';
 import Creatable from 'react-select/lib/Creatable';
 import MaskedInput from 'react-text-mask';
+import ThemedStyleSheet from 'react-with-styles/lib/ThemedStyleSheet';
+import aphroditeInterface from 'react-with-styles-interface-aphrodite';
+import DefaultTheme from 'react-dates/lib/theme/DefaultTheme';
+import 'react-dates/lib/css/_datepicker.css';
 
-registerLocale('pt', pt);
+import { DateRangePicker, SingleDatePicker } from 'react-dates';
+
+ThemedStyleSheet.registerInterface(aphroditeInterface);
+ThemedStyleSheet.registerTheme({
+  reactDates: {
+    ...DefaultTheme.reactDates,
+    border: {
+      ...DefaultTheme.reactDates.border,
+      input: {
+        ...DefaultTheme.reactDates.border.input,
+        borderBottomFocused: '2px solid #ffc300',
+      },
+    },
+    color: {
+      ...DefaultTheme.reactDates.color,
+      selected: {
+        ...DefaultTheme.reactDates.color.selected,
+        backgroundColor: '#ffc300',
+        backgroundColor_active: '#f7bd00',
+        backgroundColor_hover: '#daa600',
+        color: 'white',
+        color_active: 'white',
+        color_hover: 'white',
+        borderColor: '#f7bd00',
+      },
+      selectedSpan: {
+        ...DefaultTheme.reactDates.color.selectedSpan,
+        backgroundColor: '#ffc300',
+        backgroundColor_active: '#f7bd00',
+        backgroundColor_hover: '#daa600',
+        color: 'white',
+        color_active: 'white',
+        color_hover: 'white',
+        borderColor: '#f7bd00',
+      },
+      hoveredSpan: {
+        backgroundColor: '#bdefff',
+        borderColor: '#5bd6ff',
+        color: '#00c0ff',
+      },
+    },
+  },
+});
+
+moment.locale('pt');
 
 const selectTheme = (theme) => ({
   ...theme,
@@ -30,13 +76,16 @@ class App extends Component {
     this.openAddScoreModal = this.openAddScoreModal.bind(this);
     this.closeLoginModal = this.closeLoginModal.bind(this);
     this.closeAddScoreModal = this.closeAddScoreModal.bind(this);
+    this.datesChange = this.datesChange.bind(this);
 
     this.state = {
       authorized: false,
       loginModalOpen: false,
       addModalOpen: false,
+      startDate: null,
+      endDate: null,
       addForm: {
-        date: new Date(),
+        date: moment(),
         games: [],
       },
       inputs: {
@@ -72,8 +121,16 @@ class App extends Component {
     });
   }
 
+  datesChange ({ startDate, endDate }) {
+    this.setState({ startDate, endDate }, () => {
+      if (this.state.startDate && this.state.endDate) {
+        this.fetchResults();
+      }
+    });
+  }
+
   fetchResults () {
-    return fetch('/api/participations', {
+    return fetch('/api/participations?dateFrom=' + (this.state.startDate ? this.state.startDate.unix() : '') + '&dateTo=' + (this.state.endDate ? this.state.endDate.unix() : ''), {
       method: 'get',
     }).then(response => {
       if (response.ok) {
@@ -189,12 +246,15 @@ class App extends Component {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(this.state.addForm),
+      body: JSON.stringify({
+        ...this.state.addForm,
+        date: this.state.addForm.date.toDate(),
+      }),
     }).then((response) => {
       if (response.ok) {
         this.setState({
           addForm: {
-            date: new Date(),
+            date: moment(),
             games: [],
           },
           submitting: false,
@@ -430,7 +490,7 @@ class App extends Component {
           }
         }
 
-        tableHeader.push(<th key="i">{game.label}</th>);
+        tableHeader.push(<th key={i}>{game.label}</th>);
       });
 
       for (let i = 0; i < this.state.gameResults.length; i++) {
@@ -454,9 +514,29 @@ class App extends Component {
           }
         }
 
-        results.push(<tr>{resultEl}</tr>);
+        results.push(<tr key={i}>{resultEl}</tr>);
       }
     }
+
+    let table = null;
+
+    if (results.length > 0) {
+      table = <table className="leaderboard">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Jogador</th>
+            <th></th>
+            {tableHeader}
+          </tr>
+        </thead>
+        <tbody>
+          {results}
+        </tbody>
+      </table>;
+    }
+
+    const noContent = <div className="no-content">Sem dados para apresentar.</div>;
 
     return (
       <div className="App">
@@ -465,20 +545,24 @@ class App extends Component {
           <button className="login button" onClick={this.pickModalToOpen} href="/login">Adicionar <span className="plus">+</span></button>
         </header>
         <div className="App-content">
+          <div className="dates">
+            <DateRangePicker
+              minimumNights={0}
+              hideKeyboardShortcutsPanel={true}
+              isOutsideRange={() => { return false; }}
+              startDate={this.state.startDate}
+              startDateId="dateFrom"
+              startDatePlaceholderText="De"
+              endDatePlaceholderText="Até"
+              endDate={this.state.endDate}
+              endDateId="dateTo"
+              onDatesChange={this.datesChange}
+              focusedInput={this.state.focusedInput}
+              onFocusChange={focusedInput => this.setState({ focusedInput })}
+            />
+          </div>
           <div className="leaderboardContainer">
-            <table className="leaderboard">
-              <thead>
-                <tr>
-                  <th></th>
-                  <th>Jogador</th>
-                  <th></th>
-                  {tableHeader}
-                </tr>
-              </thead>
-              <tbody>
-                {results}
-              </tbody>
-            </table>
+            {table != null ? table : noContent}
           </div>
 
           <Modal
@@ -500,9 +584,11 @@ class App extends Component {
               handlePlayedChange={(event, gameIndex, playerIndex) => this.handlePlayedChange(event, gameIndex, playerIndex)}
               handleWonChange={(event, gameIndex, playerIndex) => this.handleWonChange(event, gameIndex, playerIndex)}
               handleRemovePlayer={(gameIndex, playerIndex) => this.handleRemovePlayer(gameIndex, playerIndex)}
+              handleFocused={({ focused }) => this.setState({ focused })}
               isGameOptionDisabled={(option) => this.isGameOptionDisabled(option)}
               isNameOptionDisabled={(option, gameIndex) => this.isNameOptionDisabled(option, gameIndex)}
               games={this.state.games}
+              focused={this.state.focused}
               players={this.state.players}
               submitting={this.state.submitting}
             >
@@ -618,12 +704,16 @@ class AddGameDataForm extends Component {
       <form autoComplete="off">
         <div className="resultsHeader">
           <label className="dateLabel" htmlFor="date">Data</label>
-          <DatePicker
-            className="date"
-            selected={this.props.formData.date}
-            onChange={this.props.handleDateChange}
-            locale='pt'
-            dateFormat='dd/MM/yyyy'
+
+          <SingleDatePicker
+            hideKeyboardShortcutsPanel={true}
+            isOutsideRange={() => { return false; }}
+            numberOfMonths={1}
+            date={this.props.formData.date} // momentPropTypes.momentObj or null
+            onDateChange={this.props.handleDateChange} // PropTypes.func.isRequired
+            focused={this.props.focused} // PropTypes.bool
+            onFocusChange={this.props.handleFocused} // PropTypes.func.isRequired
+            id="gameDate" // PropTypes.string.isRequired,
           />
           <button type="button" onClick={this.props.handleAddScores} className="button addGame">Jogo <span className="plus">+</span></button>
         </div>
@@ -647,13 +737,15 @@ AddGameDataForm.propTypes = {
   handleAddScores: PropTypes.func,
   handleSubmitScores: PropTypes.func,
   handleWonChange: PropTypes.func,
+  handleFocused: PropTypes.func,
   handleDateChange: PropTypes.func,
   handleRemovePlayer: PropTypes.func,
   games: PropTypes.array,
-  isGameOptionDisabled: PropTypes.bool,
+  isGameOptionDisabled: PropTypes.func,
   players: PropTypes.array,
   isNameOptionDisabled: PropTypes.func,
   submitting: PropTypes.bool,
+  focused: PropTypes.bool,
 };
 
 export default App;

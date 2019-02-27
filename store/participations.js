@@ -83,14 +83,29 @@ class Participation {
   }
 
   // Get all, ready to show in a table with players and games
-  static async getAll () {
+  static async getAll (dateFrom, dateTo) {
+    let statement = `SELECT player, game, won FROM ${PARTICIPATIONS_TABLE}`;
+    let params = [];
+
+    if (dateFrom && dateTo) {
+      dateFrom = new Date(dateFrom * 1000);
+      dateFrom.setHours(0, 0, 0, 0);
+      dateTo = new Date(dateTo * 1000);
+      dateTo.setHours(23, 59, 59, 999);
+
+      let timestampFrom = dateFrom.getTime() / 1000;
+      let timestampTo = dateTo.getTime() / 1000;
+      statement = `SELECT player, game, won FROM ${PARTICIPATIONS_TABLE} WHERE timestamp >= ? AND timestamp <= ?`;
+      params = [timestampFrom, timestampTo];
+    }
+
     let rows = null;
 
     try {
       rows = await new Promise((resolve, reject) => {
         // select player, game, won from participations
         db.serialize(() => {
-          db.all(`SELECT player, game, won FROM ${PARTICIPATIONS_TABLE}`, [], (err, rows) => {
+          db.all(statement, params, (err, rows) => {
             if (err === null) {
               resolve(rows);
             } else {
@@ -106,8 +121,8 @@ class Participation {
     return Promise.resolve(rows);
   }
 
-  static async getBoard () {
-    const participations = await Participation.getAll();
+  static async getBoard (dateFrom, dateTo) {
+    const participations = await Participation.getAll(dateFrom, dateTo);
     const players = await Player.getAll();
 
     const boardPlayers = {};

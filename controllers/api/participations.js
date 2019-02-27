@@ -42,7 +42,10 @@ exports.create = (req, res, next) => {
 };
 
 exports.list = (req, res, next) => {
-  Participation.getBoard()
+  let dateFrom = req.query.dateFrom;
+  let dateTo = req.query.dateTo;
+
+  Participation.getBoard(dateFrom, dateTo)
     .then((board) => {
       res.status(200).json(board);
     })
